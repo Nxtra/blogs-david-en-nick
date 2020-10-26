@@ -19,15 +19,17 @@ In the following we will explore and compare the different serverless AWS servic
 - think about access pattern and partitioning -->
 
 ## Landing data on s3 with Kinesis Firehose
+As already mentioned, the goal is to land our data on an S3 bucket. Luckily, Amazon provides two managed solutions which will allow us to achieve this. These services, called AWS Kinesis Firehose and AWS Kinesis Data Streams, can be used to load data into AWS data stores.   
 
-We want to land our data on an S3 bucket.  
+<!--- We want to land our data on an S3 bucket.  
 We should praise ourselves lucky cause AWS has a managed solution for that!  
-AWS Kinesis Firehose loads data into AWS data stores.
+AWS Kinesis Firehose loads data into AWS data stores. --> 
 
 ### Kinesis data streams vs Kinesis firehose
-I told you we are going to use AWS Kinesis Firehose. 
+
+<!---I told you we are going to use AWS Kinesis Firehose. 
 However, AWS also offers a similar, yet different solution: AWS Kinesis data streams. 
-Let's find out what the differences are.
+Let's find out what the differences are. --> 
 
 #### Kinesis Data Streams
 - Millisecond latency: used for realtime analytics and actions.
