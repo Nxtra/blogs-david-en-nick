@@ -53,7 +53,7 @@ TODO - wat wordt er bedoeld met 'You have to manage the shards yourself which yo
 - Can convert record format before landing them in the datastore.
 
 
-Since the current use case is to ingest the data, then convert it to the "parquet" format and finally land it on an S3 bucket for further batch processing, Kinesis Firehose is the service whose properties are best suited.
+Since the current use case is to ingest the data, then convert it to the "parquet" format and finally to land it on an S3 bucket for further batch processing, Kinesis Firehose is the service whose properties are best suited.
 <!---> Data Firehose is completely serverless and can be used for near realtime application. 
 
 <!---In our case we want to ingest the data, convert it to the `parquet` format and land the data on S3 in order to do further batch processing.
@@ -62,14 +62,17 @@ Hence, this is a use case for Kinesis Firehose. -->
 ## Transform and land the data
 
 ### converting / transforming the data format (David)
-From json to parquet
+There are two main considerations which led to the choice of using the parquet file format, a columnar data storage format, for storing the data on S3.
 
-There are to main considerations which led to the choice of using the parquet file format for the storage of the data on S3
+Firstly, the parquet format provides efficient data compression, leading to a reduction of the storage that is required. The amount of storage that is saved, will especially become more noticeable as the amount of data to be stored increases.  
 
-The first consideration is query efficiency. 
+Secondly, this format is optimized for query performance, which means that amount of data being scanned during querying will be siginificantly less (as compared to querying data in, e.g., the JSON format). This will result in reduced costs when the data is queried for further batch processing.
+
+<!--- From json to parquet -->
+<!--- The first consideration is query efficiency. 
 - Why?
   - Better queryable
-  - Less storage needed
+  - Less storage needed --> 
 
 ### Partitioning using firehose
 Okay, we can transform the record format before landing the data on S3.  
