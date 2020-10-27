@@ -19,45 +19,49 @@ In the following we will explore and compare the different serverless AWS servic
 - think about access pattern and partitioning -->
 
 ## Landing data on s3 with Kinesis Firehose
-As already mentioned, the goal is to land our data on an S3 bucket. Luckily, Amazon provides two managed solutions which will allow us to achieve this. These services, called AWS Kinesis Firehose and AWS Kinesis Data Streams, can be used to load data into AWS data stores.   
+As already mentioned, our goal is to land our data on an S3 bucket. Luckily, Amazon provides two managed solutions which will allow us to achieve this. These services, called AWS Kinesis Firehose and AWS Kinesis Data Streams, can be used to load data into AWS data stores. 
+
+Next we will discuss the differences between these solutions and explain the choice to use Kinesis Firehose. 
 
 <!--- We want to land our data on an S3 bucket.  
 We should praise ourselves lucky cause AWS has a managed solution for that!  
 AWS Kinesis Firehose loads data into AWS data stores. --> 
 
 ### Kinesis data streams vs Kinesis firehose
+AWS Kinesis Firehose and AWS Kinesis Data Streams offer a similar, yet different solution to land data on an S3 bucket.
 
+Let's explore the differences between these services. 
 <!---I told you we are going to use AWS Kinesis Firehose. 
 However, AWS also offers a similar, yet different solution: AWS Kinesis data streams. 
 Let's find out what the differences are. --> 
 
-#### Kinesis Data Streams
+#### Kinesis Data Streams Properties
 - Millisecond latency: used for realtime analytics and actions.
 - Order is preserved per shard.
 - Not completely serverless: you have to manage the amount of shards yourself.
 - Secure durable storage of events on the stream up to 7 days.
 - Can be digested with a Lambda function.
 
-> Data Streams are for milliseconds realtime analytics.
-> You have to manage the shards yourself which you can automate by using the Streams API.
+TODO - wat wordt er bedoeld met 'You have to manage the shards yourself which you can automate by using the Streams API.'?
+<!---> Data Streams are for milliseconds realtime analytics.
+> You have to manage the shards yourself which you can automate by using the Streams API. --> 
 
-#### Kinesis Firehose
+#### Kinesis Firehose Properties
 - Completely serverless solution.
 - Buffer size of 1 to 128 MiBs and a buffer interval of 60 to 900 seconds.
 - Direct-to-data-store integration with S3, RedShift, ElasticSearch..
 - Can convert record format before landing them in the datastore.
 
-> Data Firehose is completely serverless and can be used for near realtime application. 
 
-In our case we want to ingest the data, convert it to the `parquet` format and land the data on S3 in order to do further batch processing.
-Hence, this is a use case for Kinesis Firehose.
+Since the current use case is to ingest the data, then convert it to the "parquet" format and finally land it on an S3 bucket for further batch processing, Kinesis Firehose is the service whose properties are best suited.
+<!---> Data Firehose is completely serverless and can be used for near realtime application. 
+
+<!---In our case we want to ingest the data, convert it to the `parquet` format and land the data on S3 in order to do further batch processing.
+Hence, this is a use case for Kinesis Firehose. --> 
 
 ## Transform and land the data
 
 ### converting / transforming the data format (David)
-
-
-
 From json to parquet
 
 There are to main considerations which led to the choice of using the parquet file format for the storage of the data on S3
