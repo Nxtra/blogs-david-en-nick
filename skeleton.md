@@ -75,22 +75,26 @@ Secondly, this format is optimized for query performance, which means that amoun
   - Less storage needed --> 
 
 ### Partitioning using firehose
-Okay, we can transform the record format before landing the data on S3.  
+As mentioned directly above using Kinesis Firehose allows us to transform the format of the records to parquet before landing the data on S3.
+
+Next, let's look at the manner in which the data is organised on S3. 
+
+<!---Okay, we can transform the record format before landing the data on S3.  
 Let's now look at how the data is organised on S3.
 
-Amazon Kinesis Data Firehose uses a UTC time prefix (`YYYY/MM/DD/HH`) to organize the data when landing it on S3.
+<!--Amazon Kinesis Data Firehose uses a UTC time prefix (`YYYY/MM/DD/HH`) to organize the data when landing it on S3.
 You could make the analogy with folders, though S3 doesn't work with folders.
 It uses keys (here separated by a `/`) to differ the path on which an object can be found on S3.
 
-A couple of consequences:
+<!--A couple of consequences:
 - Data is partitioned by Year, Month, Day, Hour (in that order).
 - Firehose uses UTC time to generate the value of the partitions.
 - The time used to create the partitions is the time at which the data is processed by firehose.
 - You cannot directly use a time that was specified in the event to land the data in a partition.
 
-> Firehose uses the processing time to create partitions on S3; You cannot use a timestamp that comes directly from your data.
+<!-- > Firehose uses the processing time to create partitions on S3; You cannot use a timestamp that comes directly from your data.
 
-Luckily, in our next blog, we will see how to repartition your data on S3 in order to organize events by a timestamp coming from the data in the event itself.
+<!--Luckily, in our next blog, we will see how to repartition your data on S3 in order to organize events by a timestamp coming from the data in the event itself.
 
 #### Hive
 We need to be forward thinking and name our partitions on S3.
