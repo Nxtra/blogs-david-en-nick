@@ -6,7 +6,8 @@
 
 The goal of this blog is to explore the use of Amazon Kinesis Data Firehose service to load raw streaming data events on an Amazon S3 bucket (thus creating a data lake) in a format that lends itself to efficient batch processing of those events, to allow for the analysis and visualization of the streaming data over longer time frames.
 
-The source data used for this purpose is traffic data, pulled from an API of the governement of Flanders (verwijzing naar vorige blog?) -- uitleg batch vs real time invoegen --, which will be transformed into an easily queryable format using an ETL workflow.
+The source data used for this purpose is traffic data, pulled from an API of the governement of Flanders 
+TODO (verwijzing naar vorige blog?) -- uitleg batch vs real time invoegen --, which will be transformed into an easily queryable format using an ETL workflow.
 
 To implement such an ETL workflow using AWS services, multiple approaches are  possible. It is, for example, possible to implement the ETL flow using the AWS Data Pipeline service in concert with the the Amazon EMR service. However, this approach - which could be labeled as a 'traditional' approach - is not easy to implement and furthermore is not serverless, thus requiring management of the underlying infrastructure. The introduction, in recent years, of serverless AWS services (e.g. AWS Glue, AWS step functions, AWS Lambda,...) however, has made it possible to achieve a completely serverless ETL workflow with reduced complexity from an implementational an management viewpoint.
 
@@ -79,6 +80,16 @@ As mentioned directly above using Kinesis Firehose allows us to transform the fo
 
 Next, let's look at the manner in which the data is organised on S3. 
 
+The Kinesis Data Firehose service uses a UTC time prefix (in the form of 'YYYY/MM/DD/HH') by default to organize data when landing it on S3. It uses keys (separated by '/' in the prefix) to determine the path by which an object can be found in an S3 bucket (note that, even though these keys give the appearance of a folder structure, the AWS S3 structure does not work with folders). 
+
+This way of organizing the data has several consequences:
+ * All data is partitioned by Year, Month, Day and Hour (in that order) and Kinesis Data Firehose uses UTC time to generate the values of the partitions
+ * The UTC time values are determined by the time at which the data is processed by Kinesis Data Firehose
+ * Is is not possible to directly use event timestamps to land data in a particular partition
+ 
+ To summarize, Kinesis Data Firehose uses processing time stamps to create partitions on S3 and it is not possible to utilize timestamps which derive directly from your data.
+ In our next blog, we will explore how to repartition data on S3 in order to organize events according to timestamps which are contained within the data of the event itself.
+
 <!---Okay, we can transform the record format before landing the data on S3.  
 Let's now look at how the data is organised on S3.
 
@@ -97,15 +108,16 @@ It uses keys (here separated by a `/`) to differ the path on which an object can
 <!--Luckily, in our next blog, we will see how to repartition your data on S3 in order to organize events by a timestamp coming from the data in the event itself.
 
 #### Hive
-We need to be forward thinking and name our partitions on S3.
+
+<!-- We need to be forward thinking and name our partitions on S3.
 This will help us out when doing repartitioning or analysis with AWS Glue.
 
-Firehose allows you to use the `Hive` naming convention.
+<!-- Firehose allows you to use the `Hive` naming convention.
 Using this naming convention, data can better cataloged with AWS Glue crawlers which will result in proper partition names.
 
-Following the `Hive` specs the folder structure is of the format “/partitionkey1=partitionvalue1/partitionkey2=partitionvalue2
+<!-- Following the `Hive` specs the folder structure is of the format “/partitionkey1=partitionvalue1/partitionkey2=partitionvalue2
 
-In the AWS console you can specify an S3 prefix for your firehose.
+<!--In the AWS console you can specify an S3 prefix for your firehose.
 Name your folders year, month, day and hour by using the following `Hive` format:
 ```
 myOwnCustomPrefix/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/
