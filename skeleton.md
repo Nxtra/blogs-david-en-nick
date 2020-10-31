@@ -1,6 +1,6 @@
 # Serverless data transform with kinesis
 
-![architecture](./img/architecture.png)
+![architecture](./img/kinesis-firehose-cloudway.png.png)
 
 ## What are we trying to do here (David)
 
