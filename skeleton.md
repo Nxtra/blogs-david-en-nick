@@ -37,7 +37,7 @@ Let's explore the differences between these services.
 - Can be digested with a Lambda function.
 
 > Data Streams are for milliseconds realtime analytics.
-> You have to manage the shards yourself which you can automate by using the Streams API. --> 
+> You have to manage the shards yourself which you can automate by using the Streams API. 
 
 The latter means that when using a Kinesis data stream we ourselves our responsible for provisioning enough capacity on our stream via the provisioning of shards.
 You can find more info [here](https://aws.amazon.com/kinesis/data-streams/faqs/#:~:text=Shard%20is%20the%20base%20throughput,you%20create%20a%20data%20stream.).
@@ -105,7 +105,7 @@ In the AWS console you can specify an S3 prefix for your firehose.
 
 
 # Cloudformation example?
-
+<!-- Todo -->
 # Conclusion (Nick + David)
 
 We have created a datalake on s3 that is partitioned, queryable and in optimal format.
