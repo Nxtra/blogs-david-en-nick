@@ -101,11 +101,15 @@ As we can also see in the example above following the `Hive` specs the folder st
 
 In the AWS console you can specify an S3 prefix for your firehose.
 
-<!-- TODO: add image of configuring this in the console -->
+Here you can view this configured in the Kinesis console.
+
+![transform-and-land](img/transform-and-land.png)
 
 
-# Cloudformation example?
-<!-- Todo -->
+# Cloudformation example
+You automate all of this using cloudformation.  
+Follow this link to find an example of how to configure this with `cloudformation`: (https://github.com/Nxtra/AWS-Firehose-Json-Parquet-Conversion-Example)[https://github.com/Nxtra/AWS-Firehose-Json-Parquet-Conversion-Example]
+ 
 # Conclusion (Nick + David)
 
 We have created a datalake on s3 that is partitioned, queryable and in optimal format.
