@@ -10,13 +10,6 @@ The source data used for this purpose is traffic data, pulled from an API of the
 We also used this data in our blog around realtime data processing: (https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d)[https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d].  
 In this blog and the next we will use this data for processing via an ETL workflow.
 
-To implement such an ETL workflow using AWS services, multiple approaches are  possible. 
-It is, for example, possible to implement the ETL flow using the AWS Data Pipeline service in concert with the the Amazon EMR service. 
-However, this approach - which could be labeled as a 'traditional' approach - is not easy to implement and furthermore is not serverless, thus requiring management of the underlying infrastructure. 
-The introduction, in recent years, of serverless AWS services (e.g. AWS Glue, AWS step functions, AWS Lambda,...) however, has made it possible to achieve a completely serverless ETL workflow with reduced complexity from an implementational an management viewpoint.
-
-In the following we will explore and compare the different serverless AWS services options that are currently available and also discuss the considerations that should be taken into account with regard to the choice of data format to be used in the data lake (e.g. access pattern and partitioning of the data).  
-
 ## Landing data on s3 with Kinesis Firehose
 As already mentioned, our goal is to land our data on an S3 bucket. 
 Luckily, Amazon provides two managed solutions which will allow us to achieve this. 
@@ -40,7 +33,7 @@ Let's explore the differences between these services.
 > You have to manage the shards yourself which you can automate by using the Streams API. 
 
 The latter means that when using a Kinesis data stream we ourselves our responsible for provisioning enough capacity on our stream via the provisioning of shards.
-You can find more info [here](https://aws.amazon.com/kinesis/data-streams/faqs/#:~:text=Shard%20is%20the%20base%20throughput,you%20create%20a%20data%20stream.).
+You can find more info [here](https://aws.amazon.com/kinesis/data-streams/faqs/#:~:text=Shard%20is%20the%20base%20throughput,you%20create%20a%20data%20stream).
 
 #### Kinesis Firehose Properties
 - Completely serverless solution.
