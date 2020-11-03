@@ -18,7 +18,7 @@ These services, called AWS Kinesis Firehose and AWS Kinesis Data Streams, can be
 Next we will discuss the differences between these solutions and explain the choice to use Kinesis Firehose. 
 
 ### Kinesis data streams vs Kinesis firehose
-AWS Kinesis Firehose and AWS Kinesis Data Streams offer a similar, yet different straming solution to transport and transform your data.
+AWS Kinesis Firehose and AWS Kinesis Data Streams offer a similar, yet different streaming solution to transport and transform your data.
 
 Let's explore the differences between these services. 
 
@@ -106,4 +106,3 @@ Follow this link to find an example of how to configure this with `cloudformatio
 # Conclusion (Nick + David)
 
 We have created a datalake on s3 that is partitioned, queryable and in optimal format.
-
