@@ -7,7 +7,7 @@
 The goal of this blog is to explore the use of Amazon Kinesis Data Firehose service to load raw streaming data events on an Amazon S3 bucket (thus creating a data lake) in a format that lends itself to efficient batch processing of those events, to allow for the analysis and visualization of the streaming data over longer time frames.
 
 The source data used for this purpose is traffic data, pulled from an API of the governement of Flanders.  
-We also used this data in our blog around realtime data processing: (https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d)[https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d].  
+We also used this data in our blog around realtime data processing: find it [here][https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d].  
 In this blog and the next we will use this data for processing via an ETL workflow.
 
 ## Landing data on s3 with Kinesis Firehose
