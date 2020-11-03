@@ -1,14 +1,15 @@
 # Serverless data transform with kinesis
 
-![architecture](./img/kinesis-firehose-cloudway.png)
-
-## What are we trying to do here (David)
+## What are we trying to do here
 
 The goal of this blog is to explore the use of Amazon Kinesis Data Firehose service to load raw streaming data events on an Amazon S3 bucket (thus creating a data lake) in a format that lends itself to efficient batch processing of those events, to allow for the analysis and visualization of the streaming data over longer time frames.
 
 The source data used for this purpose is traffic data, pulled from an API of the governement of Flanders.  
 We also used this data in our blog around realtime data processing: find it [here](https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d).  
 In this blog and the next we will use this data for processing via an ETL workflow.
+
+
+![architecture](./img/kinesis-firehose-cloudway.png)
 
 ## Landing data on s3 with Kinesis Firehose
 As already mentioned, our goal is to land our data on an S3 bucket. 
@@ -47,7 +48,7 @@ Since the current use case is to ingest the data, then convert it to the "parque
 
 ## Transform and land the data
 
-### converting / transforming the data format (David)
+### converting / transforming the data format
 There are two main considerations which led to the choice of using the parquet file format, a columnar data storage format, for storing the data on S3.
 
 Firstly, the parquet format provides efficient data compression, leading to a reduction of the storage that is required.
@@ -100,9 +101,24 @@ Here you can view this configured in the Kinesis console.
 
 
 # Cloudformation example
-You automate all of this using cloudformation.  
+You automate all of this using `cloudformation`.  
+Writing this `cloudformation` template isn't obvious.
+Therefore we provided a repository that you can deploy on your cloud account to get started.
 Follow this link to find an example of how to configure this with `cloudformation`: [https://github.com/Nxtra/AWS-Firehose-Json-Parquet-Conversion-Example](https://github.com/Nxtra/AWS-Firehose-Json-Parquet-Conversion-Example)
  
-# Conclusion (Nick + David)
+# Conclusion
 
-We have created a datalake on s3 that is partitioned, queryable and in optimal format.
+We have achieved creating a datalake on S3.  
+Our data lake is not yet ready to be used for analysis.
+We'd like to highlight the following points of attention:
+* Using the `Parquet` format to store the data on S3.
+As mentioned this format increases query performance and reduces the storage needed which results in reduced costs.
+* Partitioning of the data by `Kinesis Firehose` processing timestamp. 
+Using the `hive` convention allows you to have named partitions.
+* You can define all the necessary cloud resources in a `cloudformation` template.
+This makes deployment of your solution to different environments a lot simpler.
+
+As mentioned above our data is still partitioned according to processing time on kinesis instead of a timestamp coming from the data itself.
+Therefore our next step will be to repartition the data using a timestamp from the events themselves.
+This will be explored in our next blog!
+
