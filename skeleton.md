@@ -101,7 +101,7 @@ Here you can view this configured in the Kinesis console.
 
 # Cloudformation example
 You automate all of this using cloudformation.  
-Follow this link to find an example of how to configure this with `cloudformation`: (https://github.com/Nxtra/AWS-Firehose-Json-Parquet-Conversion-Example)[https://github.com/Nxtra/AWS-Firehose-Json-Parquet-Conversion-Example]
+Follow this link to find an example of how to configure this with `cloudformation`: [https://github.com/Nxtra/AWS-Firehose-Json-Parquet-Conversion-Example](https://github.com/Nxtra/AWS-Firehose-Json-Parquet-Conversion-Example)
  
 # Conclusion (Nick + David)
 
