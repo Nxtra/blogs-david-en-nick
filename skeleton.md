@@ -41,7 +41,7 @@ You can find more info [here](https://aws.amazon.com/kinesis/data-streams/faqs/#
 - Direct-to-data-store integration with S3, RedShift, ElasticSearch..
 - Can convert record format before landing them in the datastore.
 
-> Data Firehose is completely serverless and can be used for near realtime application. 
+> Data Firehose is completely serverless and can be used for near realtime applications. 
 
 Since the current use case is to ingest the data, then convert it to the "parquet" format and finally to land it on an S3 bucket for further batch processing, Kinesis Firehose is the service whose properties are best suited.
 
