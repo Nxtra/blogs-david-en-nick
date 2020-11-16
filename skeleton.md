@@ -46,7 +46,7 @@ You can find more info [here](https://aws.amazon.com/kinesis/data-streams/faqs/#
 
 The current use case is to ingest the data and then convert it to the `parquet` format. Finally, to land it on an S3 bucket for further batch processing, Kinesis Firehose is the service whose properties are best suited.
 
-If you want to explore the differnces between `Firehose` and `Data Streams` even further check the FAQ's here: [Firehose](https://aws.amazon.com/kinesis/data-streams/faqs/) and [Data Streams](https://aws.amazon.com/kinesis/data-firehose/faqs/)
+If you want to further explore the differences between `Firehose` and `Data Streams`, check the FAQ's here: [Firehose](https://aws.amazon.com/kinesis/data-streams/faqs/) and [Data Streams](https://aws.amazon.com/kinesis/data-firehose/faqs/)
 
 ## Transform and land the data
 
