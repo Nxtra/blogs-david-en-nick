@@ -9,42 +9,44 @@ We also used this data in our blog around realtime data processing: find it [her
 In this blog and the next we will use this data for processing via an ETL workflow.
 
 
-![architecture](./img/kinesis-firehose-cloudway.png)
+![Figure showing us the final architecture of this blog post](./img/kinesis-firehose-cloudway.png)
 
 ## Landing data on s3 with Kinesis Firehose
-As already mentioned, our goal is to land our data on an S3 bucket. 
-Luckily, Amazon provides two managed solutions which will allow us to achieve this. 
-These services, called AWS Kinesis Firehose and AWS Kinesis Data Streams, can be used to load data into AWS data stores. 
+As previously mentioned, our goal is to store our data on an S3 bucket.
+Luckily, Amazon Web Services provides two managed solutions, AWS Kinesis Firehose and AWS Kinesis Data Streams, that will allow us to achieve this.
 
-Next we will discuss the differences between these solutions and explain the choice to use Kinesis Firehose. 
+We will discuss the differences between these solutions and explain why we decided to use Kinesis Firehose.
 
 ### Kinesis data streams vs Kinesis firehose
-AWS Kinesis Firehose and AWS Kinesis Data Streams offer a similar, yet different streaming solution to transport and transform your data.
+AWS Kinesis Firehose and AWS Kinesis Data Streams offer a similar yet different streaming solution to transport and transform your data.
 
-Let's explore the differences between these services. 
+Let's explore the differences between these services.
+
 
 #### Kinesis Data Streams Properties
-- Millisecond latency: used for realtime analytics and actions.
-- Order is preserved per shard.
-- Not completely serverless: you have to manage the amount of shards yourself.
-- Secure durable storage of events on the stream up to 7 days.
-- Can be digested with a Lambda function.
+* Millisecond latency: used for realtime analytics and actions.
+* Order is preserved per shard.
+* Not completely serverless: you have to manage the amount of shards yourself.
+* Secure durable storage of events on the stream up to 7 days.
+* Can be digested with a Lambda function.
 
-> Data Streams are for milliseconds realtime analytics.
-> You have to manage the shards yourself which you can automate by using the Streams API. 
+> Data Streams are for milliseconds real-time analytics.
+> You have to manage the shards yourself, which you can automate by using the Streams API.
 
-The latter means that when using a Kinesis data stream we ourselves our responsible for provisioning enough capacity on our stream via the provisioning of shards.
+The latter means that when using a Kinesis data stream, we are responsible for provisioning enough capacity on our stream via the provisioning of shards.
 You can find more info [here](https://aws.amazon.com/kinesis/data-streams/faqs/#:~:text=Shard%20is%20the%20base%20throughput,you%20create%20a%20data%20stream).
 
 #### Kinesis Firehose Properties
-- Completely serverless solution.
-- Buffer size of 1 to 128 MiBs and a buffer interval of 60 to 900 seconds.
-- Direct-to-data-store integration with S3, RedShift, ElasticSearch..
-- Can convert record format before landing them in the datastore.
+* Completely serverless solution.
+* Buffer size of 1 to 128 MiBs and a buffer interval of 60 to 900 seconds.
+* Direct-to-data-store integration with S3, RedShift, ElasticSearch..
+* Can convert record format before landing them in the datastore.
 
 > Data Firehose is completely serverless and can be used for near realtime applications. 
 
-Since the current use case is to ingest the data, then convert it to the "parquet" format and finally to land it on an S3 bucket for further batch processing, Kinesis Firehose is the service whose properties are best suited.
+The current use case is to ingest the data and then convert it to the `parquet` format. Finally, to land it on an S3 bucket for further batch processing, Kinesis Firehose is the service whose properties are best suited.
+
+If you want to explore the differnces between `Firehose` and `Data Streams` even further check the FAQ's here: [Firehose](https://aws.amazon.com/kinesis/data-streams/faqs/) and [Data Streams](https://aws.amazon.com/kinesis/data-firehose/faqs/)
 
 ## Transform and land the data
 
