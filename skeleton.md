@@ -50,7 +50,7 @@ If you want to explore the differnces between `Firehose` and `Data Streams` even
 
 ## Transform and land the data
 
-### converting / transforming the data format
+### Converting / Transforming the data format
 There are two main considerations which led to the choice of using the parquet file format, a columnar data storage format, for storing the data on S3.
 
 Firstly, the parquet format provides efficient data compression, leading to a reduction of the storage that is required.
