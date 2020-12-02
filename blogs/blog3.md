@@ -1,4 +1,4 @@
-# Serverless data pipelines: ETL job with Athena
+# Serverless data pipelines: ETL workfow with Step Functions and Athena
 
 a.      Korte Introductie tot AWS Glue (wat zijn tables , catalog , crawler,…)
 
