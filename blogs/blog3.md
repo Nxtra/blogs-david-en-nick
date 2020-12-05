@@ -22,8 +22,8 @@ Glue uses crawlers to scan data stores and automatically infer the schema of str
 The information stored in the Data catalog can then be used for querying and analysis of data sets. After data is cataloged, it can be accessed and it is ready for ETL jobs. AWS Glue can automatically generate ETL scripts (which can be used as a starting point so users do not have start from scratch). In this blog however we will be making use of an alternative to the ETL jobs, which is making use of SQL queries implemented in AWS Athena. 
 
 To reiterate, AWS Glue has 3 main components:
-	1. The Data Catalog. A centralized metadata repository, where information about tables (which define the metadata representations or schemas of the stored 		   	      datasets),schemas and partitions is stored. Crawlers infer the metadata properties within data sources and provide connections with them.
-	2. The ETL engine. Which allows for the creation of ETL jobs once metadata is available in the data catalog (and source and target data stores can be selected form the 	   catalog). AWS Glue makes use of Apavhe Spark as the underlying engine to process data records.
-	3. The Scheduler. Once an ETL job has been created, a schedule can be set-up for the job to be run. This can be on-demand, according to a particular trigger (e.g. the 		   completion of another ETL job) or at a certain time.
+	* The Data Catalog. A centralized metadata repository, where information about tables (which define the metadata representations or schemas of the stored 		   	    datasets),schemas and partitions is stored. Crawlers infer the metadata properties within data sources and provide connections with them.
+	* The ETL engine. Which allows for the creation of ETL jobs once metadata is available in the data catalog (and source and target data stores can be selected form the 	   	   catalog). AWS Glue makes use of Apavhe Spark as the underlying engine to process data records.
+	* The Scheduler. Once an ETL job has been created, a schedule can be set-up for the job to be run. This can be on-demand, according to a particular trigger (e.g. the 		  completion of another ETL job) or at a certain time.
 
 #
