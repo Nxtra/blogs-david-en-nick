@@ -1,6 +1,5 @@
 # Serverless data pipelines: ETL workfow with Step Functions and Athena
-Algemene inleiding (link naar vorige blogs + algemeen doel van deze blog beschrijven, enz..) -> TO DO
-Part 3  of a multi-part series around analysing Flanders’ traffic whilst leveraging the power of cloud components!  
+This blog is Part 3 of a multi-part series around analysing Flanders’ traffic whilst leveraging the power of cloud components!    
 For part 1 see: https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d  
 For part 2 see: https://medium.com/cloubis/serverless-data-transform-with-kinesis-e468abd33409  
 
@@ -8,7 +7,6 @@ For part 2 see: https://medium.com/cloubis/serverless-data-transform-with-kinesi
 The goal of this blog to explore the use of the AWS Glue service in conjunction with the AWS Athena service, to repartition the raw streaming data events we landed on an Amazon S3 bucket according to events timestamps (as opposed to the processing time on Kinesis).   
 
 # Short introduction to AWS Glue (wat zijn tables , catalog , crawler,…)
-
 AWS Glue (introduced in august 2017) is a serverless Extract, Transform and Load (ETL) cloud-optimized service, that can be used for the automated organization, location, movement and transformation of data sets stored within data lakes in Amazon Simple Storage Service (S3), data warehouses in Amazon Redshift and other databases that are part of the Amazon Relational Database Service. MySQL, Oracle, Microsoft SQL Server and PostgreSQL databases are also supported.   
 
 Because Glue is serverless, there is no need to for users to provision, configure and spin-up servers and therefore there is also no life cycle management of the 		   servers.
@@ -27,16 +25,40 @@ To reiterate, AWS Glue has 3 main components:
 * The Scheduler. Once an ETL job has been created, a schedule can be set-up for the job to be run. This can be on-demand, according to a particular trigger (e.g. the 		  completion of another ETL job) or at a certain time.
 
 # Athena Service
-As stated above, we used AWS Athena to run the ETL job. 
+As stated above, we used AWS Athena to run the ETL job, instead of a Glue ETL job with an auto generated script. 
 
 The querying of datasets and data sources registered in the Glue Data Catalog is supported natively by AWS Athena. This means Athena will use the Glue Data Catalog as a cetralized location where it stores and retrieves table metadata. This metadata instructs the Athena query engine where it should read data, in what manner it should read the data and provides additional information required to process the data.
 It is, for example, possible to run an INSERT INTO DML query against a source table registered with the Data Catalog. This query will insert rows into the destination table based upon a SELECT statement run against the source table. 
 
 The INSERT INTO query, which we used to run the ETL job, performed the following:
-* The computation of aggregate values and derived fields to be used for analysis purposes (e.g. average speed, traffic jam indicators, etc..)
-* Selection of relevant information (not all information contained in the raw data was usefull for analysis and some data was possibly invalid)
-* A natural grouping of locations (e.g. by a set of lanes on the same road)
+* The computation of aggregate values and derived fields to be used for analysis purposes (e.g. average speed over the last 3 minutes or the last 20 minutes, traffic jam indicators, etc..).  
+year(originalTimestamp) as year, month(originalTimestamp) as month, day(originalTimestamp) as day, hour(originalTimestamp) as hour  
+* Selection of relevant information. Not all information contained in the raw data was usefull for analysis, some data was possibly invalid and a selection occurred of certain locations of intertest (i.e. by uniqueID)
+* A natural grouping of locations (e.g. by lve_nr, a set of lanes on the same road) and a selection of certain location of intertest (i.e. by uniqueID)
+> WHERE year(originalTimestamp)={year} AND month(originalTimestamp)={month} AND day(originalTimestamp) BETWEEN {start_day} AND {end_day}
+AND uniqueId IN (32, 37, 1840, 2125, 3388, 3391, 753, 1065, 3159, 2161, 216, 217, 1132)
+GROUP BY lve_nr, originalTimestamp, recordTimestamp
 * The repartitioning of the data by event time (year, month, day)
+> avg(currentSpeed) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 2 PRECEDING AND 0 FOLLOWING) AS avgSpeed3Minutes,
+avg(currentSpeed) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 19 PRECEDING AND 0 FOLLOWING) AS avgSpeed20Minutes,  
+> lag(currentSpeed, 1) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp) as previousSpeed   
+
+For a link to the complete ETL Athena query please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing/blob/master/queries/InsertETL.sql.
+For a link to the explanation of field definintions please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing. 
+
+As Amazon imposes a limit of 100 simultaneously written partitions using an INSERT INTO statement, we implemented a Lamda funtion to execute multiple concurrent queries. For this purpose queries were split into date ranges of (maximum) 4 days (i.e. a range between a start day and an end day), which limted the amount of simultaneously written partitions to 96 hours.
+> WHERE year(originalTimestamp)={year} AND month(originalTimestamp)={month} AND day(originalTimestamp) BETWEEN {start_day} AND {end_day}
+
+When using AWS Athena to perform the ETL job, as opposed to using Glue ETL jobs ,there is no functionality to automatically start the next process in a workflow. Therefore we also implemented a polling mechanism in order to periodically check for crawler/ETl query completion.
+
+# Alternative solution for the ETL workflow
+As already mentioned several times, we could also have used Glue ETL jobs for the implementation of the ETL workflow. These ETL jos handle all processing and repartitioning of the data through python scripts with Spark.
+
+In our next blog in the series we will explore the practical implementation of this alternative solution and compare the advantages and disadvantages of the use of Glue ETL jobs vs. AWS Athena ETL queries for the implementation of ETL workflows.    
+
+
+
+
 
 
 
