@@ -1,8 +1,8 @@
 # Serverless data pipelines: ETL workfow with Step Functions and Athena
 Algemene inleiding (link naar vorige blogs + algemeen doel van deze blog beschrijven, enz..) -> TO DO
-Part 3  of a multi-part series around analysing Flanders’ traffic whilst leveraging the power of cloud components!
-For part 1 see: https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d
-For part 2 see: https://medium.com/cloubis/serverless-data-transform-with-kinesis-e468abd33409
+Part 3  of a multi-part series around analysing Flanders’ traffic whilst leveraging the power of cloud components!  
+For part 1 see: https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d  
+For part 2 see: https://medium.com/cloubis/serverless-data-transform-with-kinesis-e468abd33409  
 
 # What is the goal we are trying to achieve?
 The goal of this blog to explore the use of the AWS Glue service in conjunction with the AWS Athena service, to repartition the raw streaming data events we landed on an Amazon S3 bucket according to events timestamps (as opposed to the processing time on Kinesis).   
