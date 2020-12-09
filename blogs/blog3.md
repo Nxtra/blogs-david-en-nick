@@ -3,10 +3,13 @@
 a.      Korte Introductie tot AWS Glue (wat zijn tables , catalog , crawler,…)
 
 b.      State machine (Nick)
-Doel: repartitioning the data so that it is partioned based on the timestamp in the events.
-How: We are basically writing ETL here because we are going to extract the existing data from S3, transform it by creating new coloms based on the timestamp and land it in new partitions.
+As we mentioned, we are gonna build an ETL pipeline that repartitions the data in our datalake on S3.
+This repartitioning will make sure the data is partitioned based on a timestamp within the event.
+This is in contrast to the current way of partitioning based on the timestamp that it arrived on kinesis firehose.
 
-A couple of things need to happen:
+> We are building an ETL job here because we are going to extract the existing data from S3, transform it by creating new coloms based on the timestamp and land it in new partitions.
+
+For this, a couple of things need to happen:
 * We need to figure out what the current data looks like. 
 Ergo, register a schema in the GLUE catalog for our current data.
   * In order to find this schema we run a Crawler.
@@ -45,8 +48,8 @@ Let's first look at the ASL that defines these steps.
 
 AWS Sam and the Serverless Framework both allow you to specify the ASL as `yaml`.
 Using `yaml` improved readability we found.
-As such we defined our `ASL` as follows. 
-(Read below to find out more about what we are defining here)
+As such we defined our `ASL` as follows:
+(For a complete example check out the linked repository)
 
 ```yaml
 BatchProcessingStateMachine:
@@ -80,43 +83,7 @@ BatchProcessingStateMachine:
               StringEquals: SUCCEEDED
             Next: RunETLInsertAthena
           - And:
-            - Variable: '$.CrawlerState'
-              StringEquals: READY
-            - Variable: '$.CrawlerStatus'
-              StringEquals: FAILED
-            Next: CrawlerFailed
-      CrawlerFailed:
-        Type: Fail
-        Cause: "Crawler run has failed"
-        Error: "Crawler run has failed"
-      RunETLInsertAthena:
-        Type: Task
-        Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-RunETLInsertAthena
-        Next: WaitAthena
-      WaitAthena:
-        Type: Wait
-        Seconds: 30
-        Next: GetAthenaState
-      GetAthenaState:
-        Type: Task
-        Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:${self:service}-${opt:stage}-GetAthenaState
-        Next: CheckAthenaState
-      CheckAthenaState:
-        Type: Choice
-        Default: WaitAthena
-        Choices:
-          - Variable: '$.AthenaState'
-            StringEquals: SUCCEEDED
-            Next: SuccessEndState
-          - Variable: '$.AthenaState'
-            StringEquals: FAILED
-            Next: AthenaFailed
-      AthenaFailed:
-        Type: Fail
-        Cause: "Athena ETL insert query has failed"
-        Error: "Athena ETL insert query has failed"
-      SuccessEndState:
-        Type: Succeed
+            ...
 ```
 
 This `ASL` describes the same workflow as the state image above. 
@@ -126,10 +93,15 @@ Note that indeed we have the steps: running crawler, registering schema, executi
 But we also have "wait" steps were we periodically check if a crawler is ready with his work.
 And we have failure states that we use to react on failure in our process.
 
-<!-- TODO: nog meer uitleg over wat er in elke ASL stap gedefinieerd wordt. Type, Resource, Choice Error, Next, Seconds .. -->
+Since this blog focusses on data and not on how to build state machines we'll put a link here if you want to know more about `AWS State Machines` and `Step Functions`: [https://aws.amazon.com/getting-started/hands-on/create-a-serverless-workflow-step-functions-lambda/](https://aws.amazon.com/getting-started/hands-on/create-a-serverless-workflow-step-functions-lambda/).
 
-c.      Step functions (Nick)
-Now it is time to look a little deeper into what happens every step.
+In the resources you'll find a link to a great course by [Yan Cui](https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions).
+
+c.     Logic of Step functions (Nick)
+Now it is time to look a little deeper into what happens every step.  
+Choose descriptive names for your steps so that it is clear immediately clear what happens in a certain step.
+
+Here are a few of our steps (again, check out the repository if you want to see all the logic):
 
 **RunDataCrawler**
 This triggers the executing of a Lambda Function which in turn triggers a Glue Crawler
@@ -161,8 +133,8 @@ def handle(event, context):
             'year': event['year'], 'month': event['month'], 'day': event['day']}
 ```
 
-This then tells us whether or not the crawler is finished.
-And thus, wheter or not we can move on to the next step of our workflow
+This returns the state of the crawler, thus telling us whether or not the crawler is finished.
+As you can see from the diagram and the ASL, we'll use this status to make a `choice` for what is the next step to execute.
 
 **RunETLInsertAthena**
 When the crawler is finished it is time to run the ETL job.
@@ -176,10 +148,7 @@ The handler of the lambda function that starts the ETL job looks as follows.
 def handle(event, context):
     try:
         queries = create_queries(event['year'], event['month'], event['day'])
-    except Exception as e:
-        return {'Response': 'FAILED', 'Error': str(e)}
-    execution_ids = []
-    for query in queries:
+        ...
         try:
             response = execute_query(query)
             execution_ids.append(response)
@@ -188,8 +157,7 @@ def handle(event, context):
     return {'Response': 'SUCCEEDED', 'QueryExecutionIds': execution_ids}
 
 ```
-For more details on the methods being executed in the function check out the linked git repository.
-Basically it comes down to this:
+
 * define the queries, specifying which data range you want to repartition
 * pass this queries to `Athena`
 * return the Athena execution ID. An ID that we can use to check on the state of the ETL job with Athena.
@@ -204,13 +172,11 @@ def handle(event, context):
         state = execution['Status']['State']
         if state != 'SUCCEEDED':
             return {'AthenaState': state, 'QueryExecutionId': execution['QueryExecutionId'], 'QueryExecutionIds': event['QueryExecutionIds']}
-    for execution in response['UnprocessedQueryExecutionIds']:
-        error = execution.get('ErrorMessage', None)
-        if error is not None:
-            return {'AthenaState': 'FAILED', 'QueryExecutionId': execution['QueryExecutionId'], 'Error': error}
+        ...
     return {'AthenaState': 'SUCCEEDED'}
 ```
-<!-- todo: meer uitleg bij bovenstaande -->
+
+The `QueryExecutionIds` from the previous step are now used to get the status of a specific query.  
 
 We now saw the steps necessary in the workflow to repartition our data.
 This repartitioning happens with Athena. 
@@ -219,3 +185,8 @@ Let's dive deeper into that in the next paragraph.
 d.      Athena service (hoe query lezen?, etc..)
 
 e.      Alternatieve oplossing (Glue Etl job -- pyspark; kort vermelden kan aparte blog zijn)
+
+
+
+# Resources
+* Step Function course: [https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions](https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions)
