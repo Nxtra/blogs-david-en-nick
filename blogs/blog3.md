@@ -4,25 +4,30 @@ For part 1 see: https://medium.com/cloudway/real-time-data-processing-with-kines
 For part 2 see: https://medium.com/cloubis/serverless-data-transform-with-kinesis-e468abd33409  
 
 # What is the goal we are trying to achieve?
-The goal of this blog to explore the use of the AWS Glue service in conjunction with the AWS Athena service, to repartition the raw streaming data events we landed on an Amazon S3 bucket according to events timestamps (as opposed to the processing time on Kinesis).   
+The goal of this blog to explore the use of the AWS Glue service in conjunction with the AWS Athena service in order to repartition raw streaming data events. We previously landed these events on an Amazon S3 bucket partitioned according to the processing time on Kinesis. Now, however, we would like to have these events partitioned according to event timestamps to allow for meaningful batch analysis.    
 
-# Short introduction to AWS Glue (wat zijn tables , catalog , crawler,…)
-AWS Glue (introduced in august 2017) is a serverless Extract, Transform and Load (ETL) cloud-optimized service, that can be used for the automated organization, location, movement and transformation of data sets stored within data lakes in Amazon Simple Storage Service (S3), data warehouses in Amazon Redshift and other databases that are part of the Amazon Relational Database Service. MySQL, Oracle, Microsoft SQL Server and PostgreSQL databases are also supported.   
+# First as short introduction to AWS Glue (wat zijn tables , catalog , crawler,…)
+AWS Glue (which was introduced in august 2017) is a serverless Extract, Transform and Load (ETL) cloud-optimized service. This service can used be used to automate ETL processes that organize, locate, move and transform data sets stored within a variety of data sources, allowing users to efficiently prepare these datasets for data analysis. These data sources can e.g., be data lakes in Amazon Simple Storage Service (S3), data warehouses in Amazon Redshift or other databases that are part of the Amazon Relational Database Service. Other types of databases such as MySQL, Oracle, Microsoft SQL Server and PostgreSQL are also supported in AWS GLue.   
 
-Because Glue is serverless, there is no need to for users to provision, configure and spin-up servers and therefore there is also no life cycle management of the 		   servers.
+Since AWS Glue is a serverless service, users are not required to provision, configure and spin-up servers and they do not need to spend time and energy managing the life cycle management of the servers.   
 
-Glue uses crawlers to scan data stores and automatically infer the schema of structured and semi-structured data. These crawlers can: 
+At the heart of AWS Glue is the Catalog, a centralized metadata repository for all data assets. In this repository, all relevant information about data assets (such as table definitions, data locations, file types, schema information) is stored.
+
+In order to get this information into the Catalog AWS GLue uses crawlers.These crawlers can scan data stores and automatically infer the schema of any structured and semi-structured data that might be contained within the data stores.   
+These crawlers can: 
 * automatically discover datasets 
 * discover file types 
 * extract the schema
-* store all this information in a centralized metadata repository, which in AWS Glue is called the Catalog. 
+* store all this information in the Catalog. 
 
-The information stored in the Data catalog can then be used for querying and analysis of data sets. After data is cataloged, it can be accessed and it is ready for ETL jobs. AWS Glue can automatically generate ETL scripts (which can be used as a starting point so users do not have start from scratch). In this blog however we will be making use of an alternative to the ETL jobs, which is making use of SQL queries implemented in AWS Athena. 
+When data has been cataloged, it can then be accessed and ETL jobs can be performed on it. AWS Glue provides the capability to automatically generate ETL scripts, which can be used as a starting point, meaning users do not have start from scratch when developing ETL processes. In this blog however we will be focussing o nthe use of an alternative to the (automatically generated) AWS Glue ETL jobs. We will be making use of SQL queries implemented in AWS Athena to perform ETL process.  
+
+For the implementation and orchestration of more complex ETL processes, AWS Glue provides users with option of using workflows. These can be used to coordinate more complex ETL activities involving multiple crawlers, jobs and triggers. 
 
 To reiterate, AWS Glue has 3 main components:
-* The Data Catalog. A centralized metadata repository, where information about tables (which define the metadata representations or schemas of the stored 		   	    datasets),schemas and partitions is stored. Crawlers infer the metadata properties within data sources and provide connections with them.
-* The ETL engine. Which allows for the creation of ETL jobs once metadata is available in the data catalog (and source and target data stores can be selected form the 	   	   catalog). AWS Glue makes use of Apavhe Spark as the underlying engine to process data records.
-* The Scheduler. Once an ETL job has been created, a schedule can be set-up for the job to be run. This can be on-demand, according to a particular trigger (e.g. the 		  completion of another ETL job) or at a certain time.
+* The Data Catalog, a centralized metadata repository, where all metadata information concerning  your data is stored. This includes information about tables (which define the metadata representations or schemas of the stored datasets), schemas and partitions. The metadata properties are inferred within data sources by crawlers, which also provide connections with them.
+* The Apache Spark ETL engine. Once metadata is available in the data catalog and source and target data stores can be selected form the catalog, the Apache Spark ETL engine allows for the creation of ETL jobs that can be used to process the data.    
+* The Scheduler. Users can set-up a schedule for their AWS ETL jobs. This schedule can be linked to a specific trigger (e.g. the completion of another ETL job), a particular time of day or a job can be set-up to run on-demand.
 
 # Athena Service
 As stated above, we used AWS Athena to run the ETL job, instead of a Glue ETL job with an auto generated script. 
