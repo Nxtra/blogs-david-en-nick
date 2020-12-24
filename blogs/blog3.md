@@ -9,20 +9,20 @@ The goal of this blog to explore the use of the AWS Glue service in conjunction 
 # First as short introduction to AWS Glue (wat zijn tables , catalog , crawler,…)
 AWS Glue (which was introduced in august 2017) is a serverless Extract, Transform and Load (ETL) cloud-optimized service. This service can used be used to automate ETL processes that organize, locate, move and transform data sets stored within a variety of data sources, allowing users to efficiently prepare these datasets for data analysis. These data sources can e.g., be data lakes in Amazon Simple Storage Service (S3), data warehouses in Amazon Redshift or other databases that are part of the Amazon Relational Database Service. Other types of databases such as MySQL, Oracle, Microsoft SQL Server and PostgreSQL are also supported in AWS GLue.   
 
-Since AWS Glue is a serverless service, users are not required to provision, configure and spin-up servers and they do not need to spend time and energy managing the life cycle management of the servers.   
+Since AWS Glue is a serverless service, users are not required to provision, configure and spin-up servers and they do not need to spend time managing servers.   
 
 At the heart of AWS Glue is the Catalog, a centralized metadata repository for all data assets. In this repository, all relevant information about data assets (such as table definitions, data locations, file types, schema information) is stored.
 
-In order to get this information into the Catalog AWS GLue uses crawlers.These crawlers can scan data stores and automatically infer the schema of any structured and semi-structured data that might be contained within the data stores.   
+In order to get this information into the Catalog AWS GLue uses crawlers. These crawlers can scan data stores and automatically infer the schema of any structured and semi-structured data that might be contained within the data stores.   
 These crawlers can: 
 * automatically discover datasets 
 * discover file types 
 * extract the schema
 * store all this information in the Catalog. 
 
-When data has been cataloged, it can then be accessed and ETL jobs can be performed on it. AWS Glue provides the capability to automatically generate ETL scripts, which can be used as a starting point, meaning users do not have start from scratch when developing ETL processes. In this blog however we will be focussing o nthe use of an alternative to the (automatically generated) AWS Glue ETL jobs. We will be making use of SQL queries implemented in AWS Athena to perform ETL process.  
+When data has been cataloged, it can then be accessed and ETL jobs can be performed on it. AWS Glue provides the capability to automatically generate ETL scripts, which can be used as a starting point, meaning users do not have start from scratch when developing ETL processes. In this blog however, we will be focussing on the use of an alternative to the AWS Glue ETL jobs. We will be making use of SQL queries implemented in AWS Athena to perform the ETL process.  
 
-For the implementation and orchestration of more complex ETL processes, AWS Glue provides users with option of using workflows. These can be used to coordinate more complex ETL activities involving multiple crawlers, jobs and triggers. 
+For the implementation and orchestration of more complex ETL processes, AWS Glue provides users with option of using workflows. These can be used to coordinate more complex ETL activities involving multiple crawlers, jobs and triggers. We will however be using an alternative to the these AWS Glue workflows, namely a state machine with step functions to coordinate our ETL process.  
 
 To reiterate, AWS Glue has 3 main components:
 * The Data Catalog, a centralized metadata repository, where all metadata information concerning  your data is stored. This includes information about tables (which define the metadata representations or schemas of the stored datasets), schemas and partitions. The metadata properties are inferred within data sources by crawlers, which also provide connections with them.
