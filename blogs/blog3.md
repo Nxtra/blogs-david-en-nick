@@ -1,37 +1,39 @@
 # Serverless data pipelines: ETL workfow with Step Functions and Athena
 
-a.      Korte Introductie tot AWS Glue (wat zijn tables , catalog , crawler,…)
+a. Korte Introductie tot AWS Glue (wat zijn tables , catalog , crawler,…)
 
-b.      State machine (Nick)
-As we mentioned, we are gonna build an ETL pipeline that repartitions the data in our datalake on S3.
+b. State machine (Nick)
+As mentioned above, our goals is the creation of an ELT pipeline which will repartition the data we already landed in an S3 datalake.
 This repartitioning will make sure the data is partitioned based on a timestamp within the event.
 This is in contrast to the current way of partitioning based on the timestamp that it arrived on kinesis firehose.
+For the purpose of analysis of the traffic events however, we need our data to be partitioned based on event timestamps, not Kinesis Firehose timestamps.
+Hence the need for the repartitioning of the data.
 
-> We are building an ETL job here because we are going to extract the existing data from S3, transform it by creating new coloms based on the timestamp and land it in new partitions.
+> We are building an ETL job here because we are going to extract the existing data from S3, transform it by creating new coloms based on the event timestamp from within the data and land it in new partitions.
 
-For this, a couple of things need to happen:
-* We need to figure out what the current data looks like. 
-Ergo, register a schema in the GLUE catalog for our current data.
-  * In order to find this schema we run a Crawler.
-  The name says it all, a crawler will search his way trough the existing data, explore it and find out what the format is
-  * A crawler finishes by creating a schema for the current data and registering that schema in Glue
-* Next we need to run an ETL process to transform the data into new partitions.
-In this blog we will use Athena for that
-* When the data is repartitioned, we want to be able to query it.
-Therefor, again, we need to know what the data looks like and thus we'll run a crawler.
-This crawler will register the new  schema in Glue
+In order to achieve this, we need the following to happen:
 
-It would not be effecient to do this process continuously.
-Though, on the other hand we don't want to do this only once a week. 
-Since then we'd have to wait a week to run the reporting on the data.
+- First we need to figure out what the current data looks like.
+  In other words, we need to register a schema for our source data (i.e. the data partitioned according to Kinesis Firehose timestamps, which we landed on S3) in the Glue Catalog.
+- In order to determine this schema we will need run a crawler, which will explore the existing data and determine the format of this data.
+  Running the crawler will create a schema for the source data an register that schema with the Glue catalog.
+- Next we will need to run an ETL process in order to transform the data into new partitions.
+  As already mentioned, in this blog we will focus on the use of Athena to achieve the repartitioning.
+  Read our next blog to see how it is done with AWS Glue.
+- After the data has been repartitioned, we of course would like to be able to query the data for analysis purposes.
+  To achieve this, we will again need to run a crawler to establish what the repartitioned data looks like.
+  The crawler will register the new schema in the Glue Catalog.
+
+To run this process continuously would not be very efficient.
+On the other hand, running this process not frequently enough (only once a week for example) would mean that we would have to wait too long to be able report on new data.
 
 We have a process of a few managed steps (running crawler, registering schema, executing ETL job, running crawler) that we need to orchestrate on a regular basis.
 Hence, it would be ideal for orchestration using AWS step functions.
 
-*In AWS Step Functions you define your workflows in the Amazon States Language. 
+_In AWS Step Functions you define your workflows in the Amazon States Language.
 The Step Functions console provides a graphical representation of that state machine to help visualize your application logic.
-States are elements in your state machine. 
-A state is referred to by its name, which can be any string, but which must be unique within the scope of the entire state machine*
+States are elements in your state machine.
+A state is referred to by its name, which can be any string, but which must be unique within the scope of the entire state machine_
 
 Here is overview of what our state machine will look like:
 
@@ -41,7 +43,7 @@ As you see we have a finite number of steps each being executed one after the ot
 
 ### ASL - Amazon State Language
 
-A state machine is defined using the `ASL` or Amazon States Language. 
+A state machine is defined using the `ASL` or Amazon States Language.
 This is a JSON base language to define the steps of your state machine.
 We'll later look deeper into the logic executed in each step.
 Let's first look at the ASL that defines these steps.
@@ -86,7 +88,7 @@ BatchProcessingStateMachine:
             ...
 ```
 
-This `ASL` describes the same workflow as the state image above. 
+This `ASL` describes the same workflow as the state image above.
 It's only much harder to read for human eyes.
 
 Note that indeed we have the steps: running crawler, registering schema, executing ETL job, running crawler.
@@ -97,7 +99,7 @@ Since this blog focusses on data and not on how to build state machines we'll pu
 
 In the resources you'll find a link to a great course by [Yan Cui](https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions).
 
-c.     Logic of Step functions (Nick)
+c. Logic of Step functions (Nick)
 Now it is time to look a little deeper into what happens every step.  
 Choose descriptive names for your steps so that it is clear immediately clear what happens in a certain step.
 
@@ -138,12 +140,13 @@ As you can see from the diagram and the ASL, we'll use this status to make a `ch
 
 **RunETLInsertAthena**
 When the crawler is finished it is time to run the ETL job.
-This is done using AWS `Athena`. 
+This is done using AWS `Athena`.
 Read more about the how and what of `Athena` in the next paragraph.
 
 It is however the job of a Lambda function to start the ETL job in `Athena` and to check when it is finished.
 
 The handler of the lambda function that starts the ETL job looks as follows.
+
 ```python
 def handle(event, context):
     try:
@@ -158,9 +161,9 @@ def handle(event, context):
 
 ```
 
-* define the queries, specifying which data range you want to repartition
-* pass this queries to `Athena`
-* return the Athena execution ID. An ID that we can use to check on the state of the ETL job with Athena.
+- define the queries, specifying which data range you want to repartition
+- pass this queries to `Athena`
+- return the Athena execution ID. An ID that we can use to check on the state of the ETL job with Athena.
 
 The next function checks if the ETL job is finished.
 It does so by using the execution ID that was returned from the latest step.
@@ -176,17 +179,16 @@ def handle(event, context):
     return {'AthenaState': 'SUCCEEDED'}
 ```
 
-The `QueryExecutionIds` from the previous step are now used to get the status of a specific query.  
+The `QueryExecutionIds` from the previous step are now used to get the status of a specific query.
 
 We now saw the steps necessary in the workflow to repartition our data.
-This repartitioning happens with Athena. 
+This repartitioning happens with Athena.
 Let's dive deeper into that in the next paragraph.
 
-d.      Athena service (hoe query lezen?, etc..)
+d. Athena service (hoe query lezen?, etc..)
 
-e.      Alternatieve oplossing (Glue Etl job -- pyspark; kort vermelden kan aparte blog zijn)
-
-
+e. Alternatieve oplossing (Glue Etl job -- pyspark; kort vermelden kan aparte blog zijn)
 
 # Resources
-* Step Function course: [https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions](https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions)
+
+- Step Function course: [https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions](https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions)
