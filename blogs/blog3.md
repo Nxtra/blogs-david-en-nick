@@ -35,24 +35,18 @@ As stated above, we used AWS Athena to run the ETL job, instead of a Glue ETL jo
 The querying of datasets and data sources registered in the Glue Data Catalog is supported natively by AWS Athena. This means Athena will use the Glue Data Catalog as a cetralized location where it stores and retrieves table metadata. This metadata instructs the Athena query engine where it should read data, in what manner it should read the data and provides additional information required to process the data.
 It is, for example, possible to run an INSERT INTO DML query against a source table registered with the Data Catalog. This query will insert rows into the destination table based upon a SELECT statement run against the source table. 
 
-The INSERT INTO query, which we used to run the ETL job, performed the following:
-* The computation of aggregate values and derived fields to be used for analysis purposes (e.g. average speed over the last 3 minutes or the last 20 minutes, traffic jam indicators, etc..).  
-year(originalTimestamp) as year, month(originalTimestamp) as month, day(originalTimestamp) as day, hour(originalTimestamp) as hour  
-* Selection of relevant information. Not all information contained in the raw data was usefull for analysis, some data was possibly invalid and a selection occurred of certain locations of intertest (i.e. by uniqueID)
-* A natural grouping of locations (e.g. by lve_nr, a set of lanes on the same road) and a selection of certain location of intertest (i.e. by uniqueID)
+The INSERT INTO query performed the following:
+* Selection of relevant information. Not all information contained in the raw data was useful for analysis and some data was possibly invalid (due to malfunctioning measuring equipment)
+* A natural grouping of locations (i.e. by sets of lanes on the same road). Additionally a selection of certain points of interest within each location (i.e. certain lanes were selected within each grouping)
+* The computation of aggregate values and derived fields to be used for analysis purposes (e.g. average speed over the last 3 minutes or the last 20 minutes, traffic jam indicators, etc..)  
+* The repartitioning of the data by event time (year, month, day). Repartitioning was achieved by first defining a  target table in the AWS Glue Catalog in which year, month, day and hour bigint fields were designated as Partition keys. Subsequently, in the INSERT INTO query we first converted the time of measurement to a Unix time (which we called originalTimestamp), then we grouped all data according to their location and originalTimestamp values and finally we extracted year, month, day and hour Partition key values for each grouping   
+As Amazon imposes a limit of 100 simultaneously written partitions using an INSERT INTO statement, we implemented a Lamda funtion to execute multiple concurrent queries. For this purpose queries were split into date ranges of (maximum) 4 days (i.e. a range between a start day and an end day), which limites the amount of simultaneously written partitions to 96 hours.
 > WHERE year(originalTimestamp)={year} AND month(originalTimestamp)={month} AND day(originalTimestamp) BETWEEN {start_day} AND {end_day}
-AND uniqueId IN (32, 37, 1840, 2125, 3388, 3391, 753, 1065, 3159, 2161, 216, 217, 1132)
-GROUP BY lve_nr, originalTimestamp, recordTimestamp
-* The repartitioning of the data by event time (year, month, day)
-> avg(currentSpeed) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 2 PRECEDING AND 0 FOLLOWING) AS avgSpeed3Minutes,
-avg(currentSpeed) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 19 PRECEDING AND 0 FOLLOWING) AS avgSpeed20Minutes,  
-> lag(currentSpeed, 1) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp) as previousSpeed   
 
 For a link to the complete ETL Athena query please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing/blob/master/queries/InsertETL.sql.
 For a link to the explanation of field definintions please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing. 
 
-As Amazon imposes a limit of 100 simultaneously written partitions using an INSERT INTO statement, we implemented a Lamda funtion to execute multiple concurrent queries. For this purpose queries were split into date ranges of (maximum) 4 days (i.e. a range between a start day and an end day), which limted the amount of simultaneously written partitions to 96 hours.
-> WHERE year(originalTimestamp)={year} AND month(originalTimestamp)={month} AND day(originalTimestamp) BETWEEN {start_day} AND {end_day}
+
 
 When using AWS Athena to perform the ETL job, as opposed to using Glue ETL jobs ,there is no functionality to automatically start the next process in a workflow. Therefore we also implemented a polling mechanism in order to periodically check for crawler/ETl query completion.
 
