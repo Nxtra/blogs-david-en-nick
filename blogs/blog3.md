@@ -35,6 +35,10 @@ As stated above, we used AWS Athena to run the ETL job, instead of a Glue ETL jo
 The querying of datasets and data sources registered in the Glue Data Catalog is supported natively by AWS Athena. This means Athena will use the Glue Data Catalog as a cetralized location where it stores and retrieves table metadata. This metadata instructs the Athena query engine where it should read data, in what manner it should read the data and provides additional information required to process the data.
 It is, for example, possible to run an INSERT INTO DML query against a source table registered with the Data Catalog. This query will insert rows into the destination table based upon a SELECT statement run against the source table. 
 
+> INSERT INTO "traffic"."sls_data_pipelines_batch_transformed"
+SELECT uniqueId, recordTimestamp, currentSpeed, bezettingsgraad, previousSpeed, CASE WHEN (avgSpeed3Minutes BETWEEN 0 AND 40) THEN 1 WHEN (avgSpeed3Minutes BETWEEN 41 AND 250) THEN 0 ELSE -1 END as trafficJamIndicator, CASE WHEN (avgSpeed20Minutes BETWEEN 0 AND 40) THEN 1 WHEN (avgSpeed20Minutes BETWEEN 41 AND 250) THEN 0 ELSE -1 END as trafficJamIndicatorLong, trafficIntensityClass2, trafficIntensityClass3, trafficIntensityClass4, trafficIntensityClass5, speedDiffindicator, avgSpeed3Minutes, avgSpeed20Minutes, year, month, day, hour
+FROM (SELECT ...)
+
 The INSERT INTO query performed the following:
 * Selection of relevant information. Not all information contained in the raw data was useful for analysis and some data was possibly invalid (due to malfunctioning measuring equipment)
 * A natural grouping of locations (i.e. by sets of lanes on the same road). Additionally a selection of certain points of interest within each location (i.e. certain lanes were selected within each grouping)
