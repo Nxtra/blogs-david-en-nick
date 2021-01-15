@@ -33,26 +33,27 @@ To reiterate, AWS Glue has 3 main components:
 As stated above, we used AWS Athena to run the ETL job, instead of a Glue ETL job with an auto generated script. 
 
 The querying of datasets and data sources registered in the Glue Data Catalog is supported natively by AWS Athena. This means Athena will use the Glue Data Catalog as a cetralized location where it stores and retrieves table metadata. This metadata instructs the Athena query engine where it should read data, in what manner it should read the data and provides additional information required to process the data.
-It is, for example, possible to run an INSERT INTO DML query against a source table registered with the Data Catalog. This query will insert rows into the destination table based upon a SELECT statement run against the source table. 
+It is, for example, possible to run an INSERT INTO DML query against a source table registered with the Data Catalog. This query will insert rows into the destination table based upon a SELECT statement run against the source table.  
+Directly below we show part of our complete INSERT INTO DML query, which has 4 additional nested subqueries in which data from the source table is transformed step by step so that it can be repartitioned and used for analysis.   
+For a link to the complete INSERT INTO DML query, please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing/blob/master/queries/InsertETL.sql.
+For a link to the explanation of field definitions please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing. 
+@Nick Zijn dit de correcte links??  
 
-> I**NSERT INTO** "traffic"."sls_data_pipelines_batch_transformed"  
+> **INSERT INTO** "traffic"."sls_data_pipelines_batch_transformed"  
 **SELECT** uniqueId, recordTimestamp, currentSpeed, bezettingsgraad, previousSpeed, CASE WHEN (avgSpeed3Minutes BETWEEN 0 AND 40) THEN 1 WHEN (avgSpeed3Minutes BETWEEN 41 AND 250) THEN 0 ELSE -1 END as trafficJamIndicator, CASE WHEN (avgSpeed20Minutes BETWEEN 0 AND 40) THEN 1 WHEN (avgSpeed20Minutes BETWEEN 41 AND 250) THEN 0 ELSE -1 END as trafficJamIndicatorLong, trafficIntensityClass2, trafficIntensityClass3, trafficIntensityClass4, trafficIntensityClass5, speedDiffindicator, avgSpeed3Minutes, avgSpeed20Minutes, year, month, day, hour   
-**FROM** (**SELECT** ...)
+**FROM**   
+(**SELECT** uniqueId, recordTimestamp, currentSpeed, bezettingsgraad, previousSpeed, trafficIntensityClass2, trafficIntensityClass3, trafficIntensityClass4,         trafficIntensityClass5, CASE WHEN (currentSpeed - previousSpeed >= 20) THEN 1 WHEN (currentSpeed - previousSpeed <= -20) THEN -1 ELSE 0 END AS speedDiffindicator, avg(currentSpeed) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 2 PRECEDING AND 0 FOLLOWING) AS avgSpeed3Minutes, avg(currentSpeed) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 19 PRECEDING AND 0 FOLLOWING) AS avgSpeed20Minutes,year(originalTimestamp) as year, month(originalTimestamp) as month, day(originalTimestamp) as day, hour(originalTimestamp) as hour  
+**FROM**  
+(**SELECT** ....)
 
-The INSERT INTO query performed the following:
-* Selection of relevant information. Not all information contained in the raw data was useful for analysis and some data was possibly invalid (due to malfunctioning measuring equipment)
-* A natural grouping of locations (i.e. by sets of lanes on the same road). Additionally a selection of certain points of interest within each location (i.e. certain lanes were selected within each grouping)
+The (part of the) INSERT INTO DML query shown directly above, performed the following:
+* Selection of relevant information. Not all information contained in the raw data was useful for analysis and some data was possibly invalid (e.g. due to malfunctioning measuring equipment)  
 * The computation of aggregate values and derived fields to be used for analysis purposes (e.g. average speed over the last 3 minutes or the last 20 minutes, traffic jam indicators, etc..)  
-* The repartitioning of the data by event time (year, month, day). Repartitioning was achieved by first defining a  target table in the AWS Glue Catalog in which year, month, day and hour bigint fields were designated as Partition keys. Subsequently, in the INSERT INTO query we first converted the time of measurement to a Unix time (which we called originalTimestamp), then we grouped all data according to their location and originalTimestamp values and finally we extracted year, month, day and hour Partition key values for each grouping   
-As Amazon imposes a limit of 100 simultaneously written partitions using an INSERT INTO statement, we implemented a Lamda funtion to execute multiple concurrent queries. For this purpose queries were split into date ranges of (maximum) 4 days (i.e. a range between a start day and an end day), which limites the amount of simultaneously written partitions to 96 hours.
-> WHERE year(originalTimestamp)={year} AND month(originalTimestamp)={month} AND day(originalTimestamp) BETWEEN {start_day} AND {end_day}
+* The repartitioning of the data by event time (i.e the year, month and day values of the originalTimestamp). Repartitioning is achieved by first defining a target table in the AWS Glue Catalog in which year, month, day and hour bigint fields were designated as Partition keys. Subsequently, we extracted the year, month and day values of the originalTimestamp (i.e. the timestamp of the measurement itself, not the timestamp of the processing time on Kinesis) and finally these values where assigned to the year, month, day and hour bigint fields which we designated as Partition keys in the target table.     
+  
+Because Amazon imposes a limit of 100 simultaneously written partitions using an INSERT INTO statement, we implemented a Lamda funtion to execute multiple concurrent queries. For this purpose queries were split into date ranges of (maximum) 4 days (i.e. a range between a start day and an end day), which limites the amount of simultaneously written partitions to 96 hours.
 
-For a link to the complete ETL Athena query please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing/blob/master/queries/InsertETL.sql.
-For a link to the explanation of field definintions please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing. 
-
-
-
-When using AWS Athena to perform the ETL job, as opposed to using Glue ETL jobs ,there is no functionality to automatically start the next process in a workflow. Therefore we also implemented a polling mechanism in order to periodically check for crawler/ETl query completion.
+When using AWS Athena to perform the ETL job, as opposed to using Glue ETL jobs, there is no functionality to automatically start the next process in a workflow. Therefore we also implemented a polling mechanism in order to periodically check for crawler/ETl query completion.
 
 # Alternative solution for the ETL workflow
 As already mentioned several times, we could also have used Glue ETL jobs for the implementation of the ETL workflow. These ETL jos handle all processing and repartitioning of the data through python scripts with Spark.
