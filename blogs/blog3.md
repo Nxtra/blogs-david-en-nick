@@ -35,7 +35,7 @@ As stated above, we used AWS Athena to run the ETL job, instead of a Glue ETL jo
 The querying of datasets and data sources registered in the Glue Data Catalog is supported natively by AWS Athena. This means Athena will use the Glue Data Catalog as a cetralized location where it stores and retrieves table metadata. This metadata instructs the Athena query engine where it should read data, in what manner it should read the data and provides additional information required to process the data.
 It is, for example, possible to run an INSERT INTO DML query against a source table registered with the Data Catalog. This query will insert rows into the destination table based upon a SELECT statement run against the source table.  
 Directly below we show part of our complete INSERT INTO DML query, which has 4 additional nested subqueries in which data from the source table is transformed step by step so that it can be repartitioned and used for analysis.   
-For a link to the complete INSERT INTO DML query, please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing/blob/master/queries/InsertETL.sql.
+For a link to the complete INSERT INTO DML query, please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing/blob/master/queries/InsertETL.sql.  
 For a link to the explanation of field definitions please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing. 
 @Nick Zijn dit de correcte links??  
 
