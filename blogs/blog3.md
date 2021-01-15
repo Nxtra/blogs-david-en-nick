@@ -44,7 +44,7 @@ For a link to the explanation of field definitions please refer to https://githu
 **FROM**   
 (**SELECT** uniqueId, recordTimestamp, currentSpeed, bezettingsgraad, previousSpeed, trafficIntensityClass2, trafficIntensityClass3, trafficIntensityClass4,         trafficIntensityClass5, CASE WHEN (currentSpeed - previousSpeed >= 20) THEN 1 WHEN (currentSpeed - previousSpeed <= -20) THEN -1 ELSE 0 END AS speedDiffindicator, avg(currentSpeed) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 2 PRECEDING AND 0 FOLLOWING) AS avgSpeed3Minutes, avg(currentSpeed) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 19 PRECEDING AND 0 FOLLOWING) AS avgSpeed20Minutes,year(originalTimestamp) as year, month(originalTimestamp) as month, day(originalTimestamp) as day, hour(originalTimestamp) as hour  
 **FROM**  
-(**SELECT** ....)
+(**SELECT**...
 
 The (part of the) INSERT INTO DML query shown directly above, performed the following:
 * Selection of relevant information. Not all information contained in the raw data was useful for analysis and some data was possibly invalid (e.g. due to malfunctioning measuring equipment)  
