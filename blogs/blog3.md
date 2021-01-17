@@ -3,7 +3,7 @@ This blog is Part 3 of a multi-part series around analysing Flanders’ traffic 
 For part 1 see: https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d  
 For part 2 see: https://medium.com/cloubis/serverless-data-transform-with-kinesis-e468abd33409  
 
-# What is the goal we are trying to achieve?
+# What is our goal?
 The goal of this blog to explore the use of the AWS Glue service in conjunction with the AWS Athena service in order to repartition raw streaming data events. We previously landed these events on an Amazon S3 bucket partitioned according to the processing time on Kinesis. Now, however, we would like to have these events partitioned according to event timestamps to allow for meaningful batch analysis.    
 
 # First, a short introduction to AWS Glue
