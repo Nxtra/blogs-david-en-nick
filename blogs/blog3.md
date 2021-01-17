@@ -63,8 +63,6 @@ As already mentioned several times, we could also have used Glue ETL jobs for th
 
 In our next blog in the series we will explore the practical implementation of this alternative solution and compare the advantages and disadvantages of the use of Glue ETL jobs vs. AWS Athena ETL queries for the implementation of ETL workflows.   
 
-# Conclusion
-
 
 
 
