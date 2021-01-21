@@ -171,7 +171,7 @@ This returns the state of the crawler, thus telling us whether or not the crawle
 As you can see from the diagram and the ASL, we'll use this status to make a `choice` for what is the next step to execute.
 
 **RunETLInsertAthena**
-When the crawler is finished it is time to run the ETL job.
+When the crawler is finished it's time to run the ETL job.
 This is done using AWS `Athena`.
 Read more about the how and what of `Athena` in the next paragraph.
 
