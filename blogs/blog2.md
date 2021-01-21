@@ -46,11 +46,11 @@ You can find more info [here](https://aws.amazon.com/kinesis/data-streams/faqs/#
 
 The current use case is to ingest the data and then convert it to the `parquet` format. Finally, to land it on an S3 bucket for further batch processing, Kinesis Firehose is the service whose properties are best suited.
 
-If you want to further explore the differences between `Firehose` and `Data Streams`, check the FAQ's here: [Firehose](https://aws.amazon.com/kinesis/data-streams/faqs/) and [Data Streams](https://aws.amazon.com/kinesis/data-firehose/faqs/)
+If you want to explore the differnces between `Firehose` and `Data Streams` even further check the FAQ's here: [Firehose](https://aws.amazon.com/kinesis/data-streams/faqs/) and [Data Streams](https://aws.amazon.com/kinesis/data-firehose/faqs/)
 
 ## Transform and land the data
 
-### converting / transforming the data format
+### Converting / Transforming the data format
 There are two main considerations which led to the choice of using the parquet file format, a columnar data storage format, for storing the data on S3.
 
 Firstly, the parquet format provides efficient data compression, leading to a reduction of the storage that is required.
