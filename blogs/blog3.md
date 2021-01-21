@@ -121,15 +121,16 @@ BatchProcessingStateMachine:
 This `ASL` describes the same workflow as the state image above.
 It's only much harder to read for human eyes.
 
-Note that indeed we have the steps: running crawler, registering schema, executing ETL job, running crawler.
+Note that we indeed have the steps: running crawler, registering schema, executing ETL job, running crawler.
 But we also have "wait" steps were we periodically check if a crawler is ready with his work.
 And we have failure states that we use to react on failure in our process.
 
-Since this blog focusses on data and not on how to build state machines we'll put a link here if you want to know more about `AWS State Machines` and `Step Functions`: [https://aws.amazon.com/getting-started/hands-on/create-a-serverless-workflow-step-functions-lambda/](https://aws.amazon.com/getting-started/hands-on/create-a-serverless-workflow-step-functions-lambda/).
+Since this blog focusses on data and not on how to build state machines we'll put a link here if you want to know more about `AWS State Machines` and `Step Functions`: [click here](https://aws.amazon.com/getting-started/hands-on/create-a-serverless-workflow-step-functions-lambda/).
 
 In the resources you'll find a link to a great course by [Yan Cui](https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions).
 
-c. Logic of Step functions
+### Logic of Step functions
+
 Now it is time to look a little deeper into what happens during every step.
 
 > Tip: Choose descriptive names for your steps so that it is clear immediately clear what happens in a certain step.
@@ -192,9 +193,9 @@ def handle(event, context):
 
 ```
 
-- define the queries, specifying which data range you want to repartition
-- pass this queries to `Athena`
-- return the Athena execution ID. An ID that we can use to check on the state of the ETL job with Athena.
+- Define the queries, specifying which data range you want to repartition.
+- Pass this queries to `Athena`.
+- Return the Athena execution ID. An ID that we can use to check on the state of the ETL job with Athena.
 
 The next function checks if the ETL job is finished.
 It does so by using the execution ID that was returned from the latest step.
@@ -212,41 +213,72 @@ def handle(event, context):
 
 The `QueryExecutionIds` from the previous step are now used to get the status of a specific query.
 
-We now saw the steps necessary in the workflow to repartition our data.
-This repartitioning happens with Athena.
+We saw the steps necessary in the workflow to repartition our data.
+This repartitioning was achieved with Athena.
 Let's dive deeper into that in the next paragraph.
 
 # Athena Service
 
 As stated above, we used AWS Athena to run the ETL job, instead of a Glue ETL job with an auto generated script.
 
-The querying of datasets and data sources registered in the Glue Data Catalog is supported natively by AWS Athena. This means Athena will use the Glue Data Catalog as a cetralized location where it stores and retrieves table metadata. This metadata instructs the Athena query engine where it should read data, in what manner it should read the data and provides additional information required to process the data.
+The querying of datasets and data sources registered in the Glue Data Catalog is supported natively by AWS Athena. This means Athena will use the Glue Data Catalog as a centralized location where it stores and retrieves table metadata. This metadata instructs the Athena query engine where it should read data, in what manner it should read the data and provides additional information required to process the data.
 It is, for example, possible to run an INSERT INTO DML query against a source table registered with the Data Catalog. This query will insert rows into the destination table based upon a SELECT statement run against the source table.  
 Directly below we show part of our complete INSERT INTO DML query, which has additional nested subqueries in which data from the source table is transformed step by step so that it can be repartitioned and used for analysis.
 
-> **INSERT INTO** "traffic"."sls_data_pipelines_batch_transformed"  
-> **SELECT** uniqueId, recordTimestamp, currentSpeed, bezettingsgraad, previousSpeed, CASE WHEN (avgSpeed3Minutes BETWEEN 0 AND 40) THEN 1 WHEN (avgSpeed3Minutes BETWEEN 41 AND 250) THEN 0 ELSE -1 END as trafficJamIndicator, CASE WHEN (avgSpeed20Minutes BETWEEN 0 AND 40) THEN 1 WHEN (avgSpeed20Minutes BETWEEN 41 AND 250) THEN 0 ELSE -1 END as trafficJamIndicatorLong, trafficIntensityClass2, trafficIntensityClass3, trafficIntensityClass4, trafficIntensityClass5, speedDiffindicator, avgSpeed3Minutes, avgSpeed20Minutes, year, month, day, hour  
-> **FROM**  
-> (**SELECT** uniqueId, recordTimestamp, currentSpeed, bezettingsgraad, previousSpeed, trafficIntensityClass2, trafficIntensityClass3, trafficIntensityClass4, trafficIntensityClass5, CASE WHEN (currentSpeed - previousSpeed >= 20) THEN 1 WHEN (currentSpeed - previousSpeed <= -20) THEN -1 ELSE 0 END AS speedDiffindicator, avg(currentSpeed) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 2 PRECEDING AND 0 FOLLOWING) AS avgSpeed3Minutes, avg(currentSpeed) OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 19 PRECEDING AND 0 FOLLOWING) AS avgSpeed20Minutes,year(originalTimestamp) as year, month(originalTimestamp) as month, day(originalTimestamp) as day, hour(originalTimestamp) as hour  
-> **FROM**  
-> (**SELECT**...
+```sql
+INSERT INTO "traffic"."sls_data_pipelines_batch_transformed"
+SELECT uniqueId, recordTimestamp, currentSpeed, bezettingsgraad, previousSpeed,
+  CASE
+    WHEN (avgSpeed3Minutes BETWEEN 0 AND 40) THEN 1
+    WHEN (avgSpeed3Minutes BETWEEN 41 AND 250) THEN 0
+    ELSE -1
+  END
+    as trafficJamIndicator,
+  CASE
+    WHEN (avgSpeed20Minutes BETWEEN 0 AND 40) THEN 1
+    WHEN (avgSpeed20Minutes BETWEEN 41 AND 250) THEN 0
+    ELSE -1
+  END
+    as trafficJamIndicatorLong, trafficIntensityClass2, trafficIntensityClass3, trafficIntensityClass4, trafficIntensityClass5, speedDiffindicator, avgSpeed3Minutes, avgSpeed20Minutes, year, month, day, hour
+FROM
+  (SELECT uniqueId, recordTimestamp, currentSpeed, bezettingsgraad, previousSpeed, trafficIntensityClass2, trafficIntensityClass3, trafficIntensityClass4, trafficIntensityClass5,
+  CASE
+    WHEN (currentSpeed - previousSpeed >= 20) THEN 1
+    WHEN (currentSpeed - previousSpeed <= -20) THEN -1
+    ELSE 0
+  END
+  AS speedDiffindicator, avg(currentSpeed)
+  OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 2 PRECEDING AND 0 FOLLOWING)
+    AS avgSpeed3Minutes, avg(currentSpeed)
+  OVER (PARTITION BY uniqueId ORDER BY originalTimestamp ROWS BETWEEN 19 PRECEDING AND 0 FOLLOWING)
+    AS avgSpeed20Minutes,year(originalTimestamp) as year, month(originalTimestamp) as month, day(originalTimestamp) as day, hour(originalTimestamp) as hour
+FROM
+(SELECT...
+
+```
 
 The (part of the) INSERT INTO DML query shown directly above, performed the following:
 
-- Final selection of relevant information for data analysis. Not all information contained in the raw data was useful for analysis and some data was possibly invalid (e.g. due to malfunctioning measuring equipment)
-- The computation of aggregate values and derived fields to be used for analysis purposes (e.g. average speed over the last 3 minutes or the last 20 minutes, traffic jam indicators, etc..)
-- The repartitioning of the data by event time (i.e the year, month and day values of the originalTimestamp). Repartitioning is achieved by first defining a target table in the AWS Glue Catalog in which year, month, day and hour bigint fields were designated as Partition keys. Subsequently, we extracted the year, month and day values of the originalTimestamp (i.e. the timestamp of the measurement itself, not the timestamp of the processing time on Kinesis) and finally these values where assigned to the year, month, day and hour bigint fields which we designated as Partition keys in the target table.
+- Final selection of relevant information for data analysis.
+  Not all information contained in the raw data was useful for analysis and some data was possibly invalid (e.g. due to malfunctioning measuring equipment)
+- The computation of aggregate values and derived fields to be used for analysis purposes.
+  For example calculation of the average speed and the implementation of the logic of what we consider a traffic jam.
+- The repartitioning of the data by event time (i.e the year, month and day values of the originalTimestamp).
+  Repartitioning is achieved by first defining a target table in the AWS Glue Catalog in which year, month, day and hour bigint fields were designated as Partition keys.
+  Subsequently, we extracted the year, month and day values of the originalTimestamp (i.e. the timestamp of the measurement itself, not the timestamp of the processing time on Kinesis) and finally these values where assigned to the year, month, day and hour bigint fields which we designated as Partition keys in the target table.
 
-The additional nested subequeries, performed the following:
+The additional nested subqueries, performed the following:
 
-- The selection and transformation (where necesarry) of relevant information from the source data for the computation of aggregate values and derived fields
-- The selection of a subset of locations from the total amount of 4600 measurement locations and the natural regrouping of these locations (e.g. grouping of sets of lanes on the same road)
-- The splitting of queries into data ranges of (maximum) 4 days (i.e. a range between a start day and an end day). Because Amazon imposes a limit of 100 simultaneously written partitions using an INSERT INTO statement, we implemented a Lamda funtion to execute multiple concurrent queries. The splitting of the queries, limits the amount of simultaneously written partitions to 96 hours.
+- The selection and transformation (where necessary) of relevant information from the source data for the computation of aggregate values and derived fields.
+- The selection of a subset of locations from the total amount of 4600 measurement locations and the natural regrouping of these locations (e.g. grouping of sets of lanes on the same road).
+- The splitting of queries into data ranges of (maximum) 4 days (i.e. a range between a start day and an end day).
+  Because Amazon imposes a limit of 100 simultaneously written partitions using an INSERT INTO statement, we implemented a Lambda function to execute multiple concurrent queries. The splitting of the queries, limits the amount of simultaneously written partitions to 96 hours.
 
-For a link to the complete INSERT INTO DML query, please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing/blob/master/queries/InsertETL.sql.  
-For a link to the explanation of field definitions please refer to https://github.com/becloudway/serverless-data-pipelines-batch-processing.
+For a link to the complete INSERT INTO DML query, please refer to [https://github.com/becloudway/serverless-data-pipelines-batch-processing/blob/master/queries/InsertETL.sql](https://github.com/becloudway/serverless-data-pipelines-batch-processing/blob/master/queries/InsertETL.sql).  
+For a link to the explanation of field definitions please refer to [this link](https://github.com/becloudway/serverless-data-pipelines-batch-processing).
 
-When using AWS Athena to perform the ETL job, as opposed to using Glue ETL jobs, there is no functionality to automatically start the next process in a workflow. Therefore we also implemented a polling mechanism in order to periodically check for crawler/ETl query completion.
+When using AWS Athena to perform the ETL job, as opposed to using Glue ETL jobs, there is no functionality to automatically start the next process in a workflow.
+Therefore we also implemented a polling mechanism in order to periodically check for crawler/ETl query completion.
 
 # Alternative solution for the ETL workflow
 
@@ -257,3 +289,5 @@ In our next blog in the series we will explore the practical implementation of t
 # Resources
 
 - Step Function course: [https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions](https://theburningmonk.thinkific.com/courses/complete-guide-to-aws-step-functions)
+- Serverless workflow with Step Functions: [https://aws.amazon.com/getting-started/hands-on/create-a-serverless-workflow-step-functions-lambda/](https://aws.amazon.com/getting-started/hands-on/create-a-serverless-workflow-step-functions-lambda/)
+- Data - field definitions: [https://github.com/becloudway/serverless-data-pipelines-batch-processing](https://github.com/becloudway/serverless-data-pipelines-batch-processing)
