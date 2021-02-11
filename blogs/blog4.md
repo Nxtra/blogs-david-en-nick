@@ -2,7 +2,7 @@
 This blog is Part 4 of a multi-part series around analysing Flanders’ traffic whilst leveraging the power of cloud components!
 
 For part 1 see: [https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d](https://medium.com/cloudway/real-time-data-processing-with-kinesis-data-analytics-ad52ad338c6d)  
-For part 2 see: [https://medium.com/cloubis/serverless-data-transform-with-kinesis-e468abd33409](https://medium.com/cloubis/serverless-data-transform-with-kinesis-e468abd33409) 
+For part 2 see: [https://medium.com/cloubis/serverless-data-transform-with-kinesis-e468abd33409](https://medium.com/cloubis/serverless-data-transform-with-kinesis-e468abd33409)   
 For part 3 see :[https://https://medium.com/cloubis/serverless-data-pipelines-etl-workflow-with-step-functions-and-athena-83ca59b7bf35] (https://https://medium.com/cloubis/serverless-data-pipelines-etl-workflow-with-step-functions-and-athena-83ca59b7bf35)
 
 # Korte Inleiding (wat zijn glue etl jobs, waarvoor gebruiken; etc…)
