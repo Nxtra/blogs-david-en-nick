@@ -16,8 +16,9 @@ These *jobs* are basically scripts that allow you to connect to source data, per
 In general there are three distinct types of *jobs*:
  * **Spark Jobs**, these process data in batches and are run in an Apache Spark environment that is managed by the AWS Glue service.
  * **Streaming ETL Jobs**, these allow the performance of ETL transformations on data streams and are run in the Apache Spark Streaming framework.
- * **Python shell jobs**, these run Python scripts as a shell and can be used to schedule and execute tasks for which an Apache Spark environment is not needed.  
-In this blog we will be implementing a **Spark job**.  
+ * **Python shell jobs**, these run Python scripts as a shell and can be used to schedule and execute tasks for which an Apache Spark environment is not needed.    
+
+In this blog we will be implementing a **Spark job**. ??keuze motiveren, meer uitleg waarom??? 
 
 ?? Job properties bespreken??
 
