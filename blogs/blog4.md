@@ -18,11 +18,9 @@ In general there are three distinct types of *jobs*:
  * **Streaming ETL Jobs**, these allow the performance of ETL transformations on data streams and are run in the Apache Spark Streaming framework.
  * **Python shell jobs**, these run Python scripts as a shell and can be used to schedule and execute tasks for which an Apache Spark environment is not needed.    
 
-In this blog we will be implementing a **Spark job**. ??keuze motiveren, meer uitleg waarom??? 
+In this blog we will be implementing a **Spark job**. ??keuze motiveren, meer uitleg waarom??? Since we are developing a solution that we would like to be able to scale up significantly in the future, including processing information from all traffic locations in Flanders, we will be implementing a Spark job
 
-?? Job properties bespreken??
-
-The AWS Glue service also provides the capability of creating *triggers*, which can start *jobs* based on a particular schedule, a certain condition (e.g. the successful completion of another *job*) or on-demand. ??onnodig om dit toe te voegen??
+The AWS Glue service also provides the capability of creating *triggers*, which can start *jobs* based on a particular schedule, a certain condition (e.g. the successful completion of another *job*) or on-demand. ??onnodig om dit toe te voegen?? Toegepast in onze use case uitleg toevoegen.
 
 # Vergelijking Glue ETL job met Athena aanpak (vanuit technisch oogpunt)
 
