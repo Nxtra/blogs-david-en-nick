@@ -23,7 +23,13 @@ In this blog we will be implementing a **Spark job**. ??keuze motiveren, meer ui
 The AWS Glue service also provides the capability of creating *triggers*, which can start *jobs* based on a particular schedule, a certain condition (e.g. the successful completion of another *job*) or on-demand. ??onnodig om dit toe te voegen?? Toegepast in onze use case uitleg toevoegen.
 
 # Vergelijking Glue ETL job met Athena aanpak (vanuit technisch oogpunt)
-
+The use of a *Glue ETL job* for data processing and repartitioning through a Python script with Spark has several benefits (as opposed to using Athena):
+* **Simplicity of implementation:** Generally speaking, implementation of solutions using *AWS Glue* workflows will be less complex as compared to the implementing the same solution in AWS Athena. This means *AWS Glue* workflows can be preferrable in certain contexts. For example, if developers lack the required technical skills or if it is important to reduce time to market.  
+* **AWS Glue Workflow:** ??toevoegen dat makkelijk een flow/sequentie van opeenvolgende Glue logic kan maken? De ene stap triggered dan automatisch de start van de volgende stap. Bij AWS Athnea moesten we meer complexe step functions implementeren??  
+* **Good Readability:** Generally speaking, one will have to write a relatively complex Athena ETL query in order to achieve the same transformations and repartitioning one can achieve in relatively simple Python script in Spark. As a result, it will generally take less time to decipher what is going in a python script, as compared to deciphering the more complex Athena ETL query. This is illustrated by the fact that, for most people, it will be a lot harder to figure out wat is going on in the Athena query we used in our last blog (as it consisted of multiple nested subqueries), compared to the Python script we used in this blog.  ?? misschien hieronder illustreren?    
+* **Scalability:** As Spark was specifically designed for fast and flexible analysis of large data sets, using a *Glue ETL job* with a Python script with Spark will ensure good scalability when working with larger amounts of data.    
+* **Bookmarks:** Since bookmarks enable AWS Glue to remember which data was already processed during previous runs of the *job*, there is no need to 'remember' which data has already been processed (as was needed when we implemented our solution with *AWS Athena*). A subsequent run of *job* will automatically only process previously unprocessed data.
+       
 
 
  
